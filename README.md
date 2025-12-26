@@ -16,7 +16,7 @@ Real-time Simulation: Simulates the end-to-end booking flow, from query to confi
 Responsive UI: A clean, minimal interface (frontend16.html) that focuses purely on the conversation and results.
 
 # 🛠️ Tech Stack
-##Frontend: HTML5, CSS3, Vanilla JavaScript (simplicity for speed)
+### Frontend: HTML5, CSS3, Vanilla JavaScript (simplicity for speed)
 
 ### Backend: Node.js, Express.js (handling API requests)
 
