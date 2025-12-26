@@ -18,10 +18,10 @@ Responsive UI: A clean, minimal interface (frontend16.html) that focuses purely 
 # 🛠️ Tech Stack
 ##Frontend: HTML5, CSS3, Vanilla JavaScript (simplicity for speed)
 
-## Backend: Node.js, Express.js (handling API requests)
+### Backend: Node.js, Express.js (handling API requests)
 
-## AI/LLM Integration: Google Gemini API
+### AI/LLM Integration: Google Gemini API
 
-## Environment Management: Dotenv for secure API key handling
+### Environment Management: Dotenv for secure API key handling
 
 <img width="1024" height="572" alt="image" src="https://github.com/user-attachments/assets/445ab477-2905-4dab-8b9c-5283a4bf3dc5" />
