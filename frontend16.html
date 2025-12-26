@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TripMe | Real-Time Flights</title>
+    <style>
+        :root { --primary: #0052cc; --accent: #ff6d38; --bg: #f4f7fa; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; height: 100vh; overflow: hidden; }
+
+        .left-side { flex: 3; display: flex; flex-direction: column; overflow: hidden; }
+        .header-stripe { background: var(--primary); color: white; padding: 15px 40px; font-size: 1.2rem; font-weight: bold; }
+        .main-container { padding: 30px 40px; overflow-y: auto; flex: 1; }
+
+        /* Search Card */
+        .search-card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 25px; position: relative; }
+        
+        .input-row { display: grid; gap: 20px; margin-bottom: 20px; position: relative; }
+        .row-1 { grid-template-columns: 1fr 1fr; gap: 80px; } 
+        .row-2 { grid-template-columns: 1fr 1fr; } 
+        .row-3 { grid-template-columns: 1fr 1fr; } 
+
+        label { font-size: 0.7rem; font-weight: 700; color: #666; margin-bottom: 6px; display: block; text-transform: uppercase; }
+        
+        /* Dropdown Arrow Styling */
+        .field-wrapper { position: relative; }
+        .field-wrapper::after {
+            content: "▼"; font-size: 0.6rem; color: #aaa;
+            position: absolute; right: 15px; bottom: 15px; pointer-events: none;
+        }
+
+        input { padding: 12px; border: 1px solid #ddd; border-radius: 8px; width: 100%; font-size: 1rem; background: white; }
+        input:focus { outline: none; border-color: var(--primary); }
+
+        .suggestions { 
+            position: absolute; width: 100%; background: white; border: 1px solid #ddd; 
+            border-radius: 0 0 8px 8px; z-index: 100; max-height: 180px; overflow-y: auto; display: none;
+            box-shadow: 0 10px 15px rgba(0,0,0,0.1);
+        }
+        .suggestion-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+        .suggestion-item:hover { background: #f0f7ff; }
+
+        .swap-btn {
+            position: absolute; left: 50%; top: 55%; transform: translate(-50%, -50%);
+            width: 34px; height: 34px; background: white; border: 2px solid var(--primary);
+            border-radius: 50%; cursor: pointer; z-index: 10; font-weight: bold; display: flex; align-items: center; justify-content: center;
+        }
+
+        /* Budget Slider */
+        .slider-section { margin-bottom: 25px; background: #f1f5f9; padding: 15px; border-radius: 10px; }
+        .slider-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
+        input[type="range"] { width: 100%; cursor: pointer; accent-color: var(--primary); }
+
+        .search-btn { background: var(--accent); color: white; border: none; padding: 16px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; font-size: 1.1rem; }
+
+        /* Flight Tickets */
+        .ticket { background: white; border-radius: 10px; margin-bottom: 12px; display: flex; border: 1px solid #eee; border-left: 5px solid var(--primary); animation: slideIn 0.3s ease-out; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .ticket-info { flex: 3; padding: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .price-zone { flex: 1.2; padding: 20px; background: #fafafa; border-left: 1px dashed #ddd; text-align: center; }
+        .price-val { font-size: 1.4rem; font-weight: 800; color: #28a745; margin-bottom: 8px; }
+
+        /* AI Sidebar */
+        .ai-sidebar { flex: 1; max-width: 350px; background: white; border-left: 1px solid #ddd; display: flex; flex-direction: column; }
+        .ai-header { background: #003d99; color: white; padding: 20px; font-weight: bold; }
+        .ai-body { padding: 15px; flex: 1; display: flex; flex-direction: column; gap: 10px; overflow: hidden; }
+        .ai-chat-box { flex: 1; background: #f9f9f9; border-radius: 8px; padding: 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; font-size: 0.9rem; }
+        .msg { padding: 8px 12px; border-radius: 8px; max-width: 85%; line-height: 1.4; }
+        .msg-ai { background: #e9e9eb; align-self: flex-start; }
+        .msg-user { background: var(--primary); color: white; align-self: flex-end; }
+    </style>
+</head>
+<body>
+
+    <div class="left-side">
+        <div class="header-stripe">TripMe</div>
+        <main class="main-container">
+            <div class="search-card">
+                <div class="input-row row-1">
+                    <div class="field-wrapper">
+                        <label>From City</label>
+                        <input type="text" id="fromInput" placeholder="Origin" autocomplete="off" data-code="BOM" value="Mumbai (BOM)">
+                        <div id="fromList" class="suggestions"></div>
+                    </div>
+                    <button class="swap-btn" onclick="swap()">⇄</button>
+                    <div class="field-wrapper">
+                        <label>To City</label>
+                        <input type="text" id="toInput" placeholder="Destination" autocomplete="off" data-code="DXB" value="Dubai (DXB)">
+                        <div id="toList" class="suggestions"></div>
+                    </div>
+                </div>
+
+                <div class="input-row row-2">
+                    <div><label>Departure Date</label><input type="date" id="travelDate"></div>
+                    <div><label>Total Passengers</label><input type="number" id="totalPax" value="1" readonly style="background:#f8f9fa; cursor:not-allowed"></div>
+                </div>
+
+                <div class="input-row row-3">
+                    <div><label>No. of Adults</label><input type="number" id="adults" value="1" min="1" max="9" oninput="updatePax()"></div>
+                    <div><label>No. of Children</label><input type="number" id="children" value="0" min="0" max="9" oninput="updatePax()"></div>
+                </div>
+
+                <div class="slider-section">
+                    <div class="slider-header">
+                        <label>Max Budget</label>
+                        <span id="priceLabel" style="font-weight:bold; color:var(--primary)">₹75,000</span>
+                    </div>
+                    <input type="range" id="priceRange" min="5000" max="300000" step="5000" value="75000" oninput="updatePriceLabel(this.value)">
+                </div>
+                
+                <button class="search-btn" onclick="fetchFlights()">SEARCH LIVE TICKETS</button>
+            </div>
+            <div id="results"></div>
+        </main>
+    </div>
+
+    <aside class="ai-sidebar">
+        <div class="ai-header">🤖 TripMe AI Agent</div>
+        <div class="ai-body">
+            <div class="ai-chat-box" id="chatBox"></div>
+            <div style="display:flex; gap:5px">
+                <input type="text" id="aiInput" style="flex:1; padding:10px; border-radius:8px; border:1px solid #ccc" placeholder="Ask AI..." onkeydown="if(event.key==='Enter')sendMessage()">
+                <button onclick="sendMessage()" style="padding:10px; background:#28a745; color:white; border:none; border-radius:8px; cursor:pointer">Send</button>
+            </div>
+        </div>
+    </aside>
+
+    <script>
+        const airports = [
+            { city: "Mumbai", iata: "BOM", country: "India" },
+            { city: "New Delhi", iata: "DEL", country: "India" },
+            { city: "Bengaluru", iata: "BLR", country: "India" },
+            { city: "Hyderabad", iata: "HYD", country: "India" },
+            { city: "Chennai", iata: "MAA", country: "India" },
+            { city: "Kolkata", iata: "CCU", country: "India" },
+            { city: "Dubai", iata: "DXB", country: "UAE" },
+            { city: "London", iata: "LHR", country: "UK" },
+            { city: "Singapore", iata: "SIN", country: "Singapore" },
+            { city: "Paris", iata: "CDG", country: "France" },
+            { city: "Bangkok", iata: "BKK", country: "Thailand" },
+            { city: "New York", iata: "JFK", country: "USA" },
+            { city: "Goa (Mopa)", iata: "GOX", country: "India" },
+            { city: "Kochi", iata: "COK", country: "India" }
+        ];
+
+        // Autocomplete Search
+        function setupSearch(inputId, listId) {
+            const input = document.getElementById(inputId);
+            const list = document.getElementById(listId);
+            input.addEventListener('input', () => {
+                const val = input.value.toLowerCase();
+                list.innerHTML = '';
+                if (!val) { list.style.display = 'none'; return; }
+                const filtered = airports.filter(a => a.city.toLowerCase().includes(val) || a.iata.toLowerCase().includes(val)).slice(0, 6);
+                if (filtered.length > 0) {
+                    list.style.display = 'block';
+                    filtered.forEach(a => {
+                        const div = document.createElement('div');
+                        div.className = 'suggestion-item';
+                        div.innerHTML = `<strong>${a.iata}</strong> - ${a.city}, ${a.country}`;
+                        div.onclick = () => {
+                            input.value = `${a.city} (${a.iata})`;
+                            input.setAttribute('data-code', a.iata);
+                            list.style.display = 'none';
+                        };
+                        list.appendChild(div);
+                    });
+                }
+            });
+        }
+        setupSearch('fromInput', 'fromList');
+        setupSearch('toInput', 'toList');
+
+        function updatePriceLabel(val) {
+            document.getElementById('priceLabel').innerText = `₹${parseInt(val).toLocaleString()}`;
+        }
+
+        function updatePax() {
+            const a = parseInt(document.getElementById('adults').value) || 0;
+            const c = parseInt(document.getElementById('children').value) || 0;
+            document.getElementById('totalPax').value = a + c;
+        }
+
+        function swap() {
+            const f = document.getElementById('fromInput'), t = document.getElementById('toInput');
+            const fC = f.getAttribute('data-code'), tC = t.getAttribute('data-code');
+            const fV = f.value, tV = t.value;
+            f.value = tV; f.setAttribute('data-code', tC);
+            t.value = fV; t.setAttribute('data-code', fC);
+        }
+
+        async function fetchFlights() {
+            const container = document.getElementById('results');
+            container.innerHTML = '<h4 style="text-align:center;">🔍 Searching Real-Time Fares...</h4>';
+            const origin = document.getElementById('fromInput').getAttribute('data-code');
+            const dest = document.getElementById('toInput').getAttribute('data-code');
+            const date = document.getElementById('travelDate').value;
+            const maxPrice = document.getElementById('priceRange').value;
+
+            try {
+                const res = await fetch(`http://localhost:5000/api/flights?origin=${origin}&destination=${dest}&date=${date}`);
+                const data = await res.json();
+                
+                if (!data.data || data.data.length === 0) {
+                    container.innerHTML = '<div style="text-align:center; padding:20px;">No flights found. Try a different date.</div>';
+                    return;
+                }
+
+                container.innerHTML = '';
+                
+                // IMPORTANT: Filter out flights that exceed budget and ensure dynamic price mapping
+                const filtered = data.data.filter(f => (f.price.total * 90) <= maxPrice);
+
+                if (filtered.length === 0) {
+                    container.innerHTML = '<div style="text-align:center; padding:20px;">No flights found within this budget.</div>';
+                    return;
+                }
+
+                filtered.forEach(f => {
+                    // Pulling price directly from the current flight 'f'
+                    const convertedPrice = Math.floor(f.price.total * 90);
+                    const departureTime = f.itineraries[0].segments[0].departure.at.split('T')[1].substring(0,5);
+                    const airline = f.itineraries[0].segments[0].carrierCode;
+
+                    container.innerHTML += `
+                        <div class="ticket">
+                            <div class="ticket-info">
+                                <div><strong>${airline}</strong></div>
+                                <div><h4>${departureTime}</h4><p>${origin}</p></div>
+                                <div style="color:var(--primary); font-size:1.2rem;">✈</div>
+                                <div><h4>Arrival</h4><p>${dest}</p></div>
+                            </div>
+                            <div class="price-zone">
+                                <div class="price-val">₹${convertedPrice.toLocaleString()}</div>
+                                <button class="search-btn" style="padding:6px 12px; font-size:0.8rem; width:auto;">SELECT</button>
+                            </div>
+                        </div>`;
+                });
+            } catch {
+                container.innerHTML = '<div style="text-align:center; color:red; padding:20px;">Server Offline. Run "node server.js"</div>';
+            }
+        }
+
+        // Close dropdowns
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.field-wrapper')) {
+                document.querySelectorAll('.suggestions').forEach(l => l.style.display = 'none');
+            }
+        });
+
+        // AI Chat
+        let messages = [{ role: 'ai', content: 'Hello! Ready to plan your next trip?' }];
+        function renderMessages() {
+            const box = document.getElementById('chatBox');
+            box.innerHTML = messages.map(m => `<div class="msg ${m.role==='ai'?'msg-ai':'msg-user'}"><strong>${m.role==='ai'?'AI: ':'You: '}</strong>${m.content}</div>`).join('');
+            box.scrollTop = box.scrollHeight;
+        }
+        async function sendMessage() {
+            const input = document.getElementById('aiInput');
+            const content = input.value.trim();
+            if(!content) return;
+            messages.push({role:'user', content});
+            renderMessages();
+            input.value = '';
+            try {
+                const res = await fetch('http://localhost:5000/api/chat', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ prompt: content })
+                });
+                const data = await res.json();
+                messages.push({role:'ai', content: data.reply});
+                renderMessages();
+            } catch {
+                messages.push({role:'ai', content: 'Error connecting to AI agent.'});
+                renderMessages();
+            }
+        }
+
+        window.onload = () => {
+            const d = new Date(); d.setDate(d.getDate() + 7);
+            document.getElementById('travelDate').value = d.toISOString().split('T')[0];
+            renderMessages();
+        };
+    </script>
+</body>
+</html>
