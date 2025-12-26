@@ -1,4 +1,4 @@
-# ✈️ tripMe - ## GenAI Flight Booking Sim
+# ✈️ tripMe - GenAI Flight Booking Sim
 Experience the future of travel planning. No forms, just conversation.
 
 # 🚀 Overview
