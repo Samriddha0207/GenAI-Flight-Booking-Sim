@@ -1,12 +1,12 @@
-# ✈️ tripMe - ##GenAI Flight Booking Sim
+# ✈️ tripMe - ## GenAI Flight Booking Sim
 Experience the future of travel planning. No forms, just conversation.
 
-# 🚀 # Overview
+# 🚀 Overview
 GenAI Flight Booking Sim is a next-generation flight reservation simulator powered by Generative AI. Instead of navigating through clunky dropdowns and date pickers, users can simply state their travel plans in natural language (e.g., "I need a flight from Kolkata to Bangalore next Friday for under ₹5k"), and the system intelligently parses the intent to find and "book" the best options.
 
 Built with a lightweight Node.js backend and a responsive vanilla HTML/JS frontend, this project demonstrates how Large Language Models (LLMs) can revolutionize user experience (UX) in the travel industry.
 
-# ✨ # Key Features
+# ✨ Key Features
 Natural Language Processing: Ditch the search filters. Just type what you want, and our GenAI agent understands origins, destinations, dates, and budget constraints.
 
 Intelligent Itinerary Matching: The system dynamically filters available flight data to match complex user queries.
